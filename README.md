@@ -57,10 +57,14 @@ No `sorry`, `admit`, `native_decide`, or additional axioms are used; CI rejects 
 
 ## Verification status
 
-- 2026-09-17: checked with zero errors and zero warnings on
-  [live.lean-lang.org](https://live.lean-lang.org) against Mathlib stable (Lean v4.34.0) and
-  latest Mathlib (Lean v4.35.0-rc2).
-- A `lake build` from this repository (see the `build` workflow) is the reference check.
+- 2026-09-17: `lake build` succeeds from a clean checkout of this repository, locally
+  (macOS, arm64) and in CI (`build` workflow, ubuntu-latest). Dependencies are pinned by
+  the committed `lake-manifest.json`; Mathlib is pinned to commit
+  `5ed2965256430c3649e86755f9576b54eca72435` (tag `v4.34.0`).
+- The CI `Axiom audit` step rebuilds the axiom list of `jsp_000301` and fails if `sorryAx`
+  appears; a separate step rejects `sorry`, `admit` and `native_decide` in any `.lean` file.
+- The same sources were also checked on [live.lean-lang.org](https://live.lean-lang.org)
+  against latest Mathlib (Lean v4.35.0-rc2).
 
 ## Attribution
 
