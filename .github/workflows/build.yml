@@ -10,10 +10,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Reject sorry / admit / native_decide
         run: |
           if grep -rnwE "sorry|admit|native_decide" --include="*.lean" .; then
             echo "Forbidden token found in Lean sources"
             exit 1
           fi
-      - uses: leanprover/lean-action@v1
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://github.com/leanprover/elan/releases/latest/download/elan-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz
+          ./elan-init -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve dependencies
+        run: lake update
+
+      - name: Fetch Mathlib cache
+        run: lake exe cache get
+
+      - name: Build
+        run: lake build
+
+      - name: Axiom audit
+        run: |
+          cat > audit.lean <<'EOF'
+          import JSP000301
+          #print axioms JSP000301.jsp_000301
+          EOF
+          lake env lean audit.lean | tee audit.out
+          grep -q "propext, Classical.choice, Quot.sound" audit.out
+          if grep -q "sorryAx" audit.out; then echo "sorryAx present"; exit 1; fi
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: lake-manifest
+          path: lake-manifest.json
